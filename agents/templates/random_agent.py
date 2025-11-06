@@ -9,7 +9,7 @@ from ..structs import FrameData, GameAction, GameState
 class Random(Agent):
     """An agent that always selects actions at random."""
 
-    MAX_ACTIONS = 80
+    MAX_ACTIONS = 3
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
@@ -34,6 +34,15 @@ class Random(Agent):
         self, frames: list[FrameData], latest_frame: FrameData
     ) -> GameAction:
         """Choose which action the Agent should take, fill in any arguments, and return it."""
+                # 👇 打印最新帧的信息
+        print(f"\n--- Frame {latest_frame.game_id} ---")
+        print(f"State: {latest_frame.state}")
+        print(f"Score: {getattr(latest_frame, 'score', 'N/A')}")
+        print(f"Screen shape: {getattr(latest_frame, 'screen', None).shape if hasattr(latest_frame, 'screen') else 'N/A'}")
+
+        # 如果想看具体的画面内容（例如64x64 grid）
+        screen = getattr(latest_frame, 'screen', None)
+        print(screen)
         if latest_frame.state in [GameState.NOT_PLAYED, GameState.GAME_OVER]:
             # if game is not started (at init or after GAME_OVER) we need to reset
             # add a small delay before resetting after GAME_OVER to avoid timeout

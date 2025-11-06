@@ -41,12 +41,12 @@ class ReasoningActionResponse(BaseModel):
     )
 
 
-class ReasoningAgent(ReasoningLLM):
+class LocalReasoningAgent(ReasoningLLM):
     """A reasoning agent that tracks screen history and builds hypotheses about game rules."""
 
     MAX_ACTIONS = 1
     DO_OBSERVATION = True
-    MODEL = "grok-4"
+    MODEL = "openai/gpt-oss-120b"
     MESSAGE_LIMIT = 5
     REASONING_EFFORT = "high"
     ZONE_SIZE = 16
@@ -56,7 +56,10 @@ class ReasoningAgent(ReasoningLLM):
         self.history: List[ReasoningActionResponse] = []
         self.screen_history: List[bytes] = []
         self.max_screen_history = 10  # Limit screen history to prevent memory leak
-        self.client = OpenAI()
+        self.client = OpenAI(
+            base_url="http://local-1:8000/v1",
+            api_key="EMPTY"
+            )
 
     def clear_history(self) -> None:
         """Clear all history when transitioning between levels."""
@@ -255,7 +258,7 @@ Hint:
                 model=self.MODEL,
                 messages=messages,
                 tools=tools,
-                tool_choice="required",
+                # tool_choice="required",
             )
 
             self.track_tokens(
@@ -264,6 +267,7 @@ Hint:
             self.capture_reasoning_from_response(response)
 
             response_message = response.choices[0].message
+            print(f"LLM Response Message: {response_message}")
             tool_calls = response_message.tool_calls
             if tool_calls:
                 tool_call = tool_calls[0]
@@ -276,7 +280,7 @@ Hint:
         except Exception as e:
             logger.error(f"LLM structured call failed: {e}")
             raise e
-
+        
     def define_next_action(self, latest_frame: FrameData) -> ReasoningActionResponse:
         """Define next action for the reasoning agent."""
         # Generate map image
