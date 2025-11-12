@@ -12,23 +12,26 @@ from .templates.llm_agents import LLM, FastLLM, GuidedLLM, ReasoningLLM
 from .templates.random_agent import Random
 from .templates.reasoning_agent import ReasoningAgent
 from .templates.smolagents import SmolCodingAgent, SmolVisionAgent
-from .templates.reasoning_agent_local import LocalReasoningAgent
 
 load_dotenv()
 
+
+def all_subclasses(cls):
+    subclasses = []
+    for subclass in cls.__subclasses__():
+        subclasses.append(subclass)
+        subclasses.extend(all_subclasses(subclass))
+    return subclasses
+
 AVAILABLE_AGENTS: dict[str, Type[Agent]] = {
     cls.__name__.lower(): cast(Type[Agent], cls)
-    for cls in Agent.__subclasses__()
+    for cls in all_subclasses(Agent)
     if cls.__name__ != "Playback"
 }
 
 # add all the recording files as valid agent names
 for rec in Recorder.list():
     AVAILABLE_AGENTS[rec] = Playback
-
-# update the agent dictionary to include subclasses of LLM class
-AVAILABLE_AGENTS["reasoningagent"] = ReasoningAgent
-AVAILABLE_AGENTS["localreasoningagent"] = LocalReasoningAgent
 
 __all__ = [
     "Swarm",
@@ -48,5 +51,4 @@ __all__ = [
     "Recorder",
     "Playback",
     "LocalReasoningAgent",
-    "AVAILABLE_AGENTS",
 ]
